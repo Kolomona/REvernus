@@ -272,7 +272,9 @@ namespace REvernus.ViewModels
             // There appears to be some sort of timing error resulting in NaN in the window under Margin and Markup
             // various other fields do not get populated with the correct data.
             // Sleeping the thread seems to fix the problem
+
             System.Threading.Thread.Sleep(50);
+
             try
             {
                 var currentChar = CharacterManager.SelectedCharacter;
@@ -281,39 +283,36 @@ namespace REvernus.ViewModels
                 {
                     using (var reader = new StreamReader(file))
                     {
-                        int lineCounter = 0;
-                        while (!reader.EndOfStream)
+                        try
                         {
-                            try
+                            reader.ReadLine(); // read first line and disregard
+                            while (!reader.EndOfStream)
                             {
-                                
-                                var values = reader.ReadLine().Split(',');
-                                lineCounter++;
-                                if (lineCounter > 1) // Do not parse the 1st line of the file
-                                {
-                                    var order = new ExportedOrderModel();
-                                    order.Price = double.Parse(values[0], CultureInfo.InvariantCulture);
-                                    order.VolumeRemaining = Convert.ToInt32(Math.Floor(Convert.ToDouble(values[1])), CultureInfo.InvariantCulture);
-                                    order.TypeId = int.Parse(values[2], CultureInfo.InvariantCulture);
-                                    order.Range = int.Parse(values[3], CultureInfo.InvariantCulture);
-                                    order.OrderId = long.Parse(values[4], CultureInfo.InvariantCulture);
-                                    order.VolumeEntered = int.Parse(values[5], CultureInfo.InvariantCulture);
-                                    order.MinVolume = int.Parse(values[6], CultureInfo.InvariantCulture);
-                                    order.IsBuyOrder = bool.Parse(values[7]);
-                                    order.DateIssued = DateTime.Parse(values[8], CultureInfo.InvariantCulture);
-                                    order.Duration = int.Parse(values[9], CultureInfo.InvariantCulture);
-                                    order.StationId = long.Parse(values[10], CultureInfo.InvariantCulture);
-                                    order.RegionId = int.Parse(values[11], CultureInfo.InvariantCulture);
-                                    order.SystemId = int.Parse(values[12], CultureInfo.InvariantCulture);
-                                    order.NumJumpsAway = int.Parse(values[13], CultureInfo.InvariantCulture);
 
-                                    Orders.Add(order);
-                                }
+                                var values = reader.ReadLine().Split(',');
+                                var order = new ExportedOrderModel();
+                                order.Price = double.Parse(values[0], CultureInfo.InvariantCulture);
+                                order.VolumeRemaining = Convert.ToInt32(Math.Floor(Convert.ToDouble(values[1])), CultureInfo.InvariantCulture);
+                                order.TypeId = int.Parse(values[2], CultureInfo.InvariantCulture);
+                                order.Range = int.Parse(values[3], CultureInfo.InvariantCulture);
+                                order.OrderId = long.Parse(values[4], CultureInfo.InvariantCulture);
+                                order.VolumeEntered = int.Parse(values[5], CultureInfo.InvariantCulture);
+                                order.MinVolume = int.Parse(values[6], CultureInfo.InvariantCulture);
+                                order.IsBuyOrder = bool.Parse(values[7]);
+                                order.DateIssued = DateTime.Parse(values[8], CultureInfo.InvariantCulture);
+                                order.Duration = int.Parse(values[9], CultureInfo.InvariantCulture);
+                                order.StationId = long.Parse(values[10], CultureInfo.InvariantCulture);
+                                order.RegionId = int.Parse(values[11], CultureInfo.InvariantCulture);
+                                order.SystemId = int.Parse(values[12], CultureInfo.InvariantCulture);
+                                order.NumJumpsAway = int.Parse(values[13], CultureInfo.InvariantCulture);
+
+                                Orders.Add(order);
+
                             }
-                            catch (Exception)
-                            {
-                                // ignored
-                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // ignored
                         }
                     }
                 }
@@ -336,7 +335,18 @@ namespace REvernus.ViewModels
                     _buyPrice = filteredBuyOrders[0].Price + 0.01;
                 }
 
-                ItemName = e.Name.Split('-')[1];
+
+                string[] temp = e.Name.Split('.');
+                List<string> tempList = temp[0].Split('-').ToList<string>();
+                tempList.RemoveAt(0);
+                tempList.RemoveAt(tempList.Count - 1);
+                ItemName = string.Join("-", tempList.ToArray());
+
+
+
+
+
+
                 Buyout = filteredSellOrders.Sum(o => o.Price * o.VolumeRemaining).ToString("N");
                 NumBuyOrders = filteredBuyOrders.Count.ToString();
                 NumSellOrders = filteredSellOrders.Count.ToString();
@@ -392,12 +402,12 @@ namespace REvernus.ViewModels
                 var multiplier = Math.Pow(10, i);
 
                 newTensRow["Volume"] = multiplier.ToString("N");
-                newTensRow["Cost"] = ((costs * multiplier)/1000000).ToString("N") + "M";
-                newTensRow["Profit"] = ((profit * multiplier)/1000000).ToString("N") + "M";
+                newTensRow["Cost"] = ((costs * multiplier) / 1000000).ToString("N") + "M";
+                newTensRow["Profit"] = ((profit * multiplier) / 1000000).ToString("N") + "M";
 
                 newFivesRow["Volume"] = (multiplier * 5).ToString("N");
-                newFivesRow["Cost"] = ((costs * multiplier * 5)/1000000).ToString("N") + "M";
-                newFivesRow["Profit"] = ((profit * multiplier * 5)/1000000).ToString("N") + "M";
+                newFivesRow["Cost"] = ((costs * multiplier * 5) / 1000000).ToString("N") + "M";
+                newFivesRow["Profit"] = ((profit * multiplier * 5) / 1000000).ToString("N") + "M";
 
                 tempTensDataTable.Rows.Add(newTensRow);
                 tempFivesDataTable.Rows.Add(newFivesRow);
@@ -451,7 +461,7 @@ namespace REvernus.ViewModels
             try
             {
                 if (Application.Current.Dispatcher != null)
-                    Application.Current.Dispatcher.Invoke(() => Clipboard.SetDataObject(BuyCopyPrice));   
+                    Application.Current.Dispatcher.Invoke(() => Clipboard.SetDataObject(BuyCopyPrice));
             }
             catch (Exception e)
             {
